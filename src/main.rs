@@ -13,6 +13,7 @@ use ratatui::{
 #[derive(Default)]
 struct App {
     exit: bool,
+    current_branch_index: usize,
 }
 
 impl App {
@@ -24,13 +25,15 @@ impl App {
             .iter()
             .position(|name| name == &currrent_branch_name)
             .unwrap_or(0);
-        
+
+        self.current_branch_index = current_index;
+
         let mut state: ListState = ListState::default();
         state.select(Some(current_index));
         
         while !self.exit {
             terminal.draw(|f|
-                self.render(f, branch_names.clone(), &mut state, current_index))?;
+                self.render(f, branch_names.clone(), &mut state))?;
             
             self.handle_input_events(branch_names.clone(), &mut state)?;
         }
@@ -38,7 +41,7 @@ impl App {
         Ok(())
     }
 
-    fn render(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, branch_names: Vec<String>, state: &mut ListState, current_branch_index: usize) {
+    fn render(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, branch_names: Vec<String>, state: &mut ListState) {
         let layout =Layout::default()
             .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(frame.size());
@@ -46,16 +49,16 @@ impl App {
         let main_area = layout[0];
         let footer_area = layout[1];
 
-        self.render_branch_list(frame, main_area, branch_names, state, current_branch_index);
+        self.render_branch_list(frame, main_area, branch_names, state);
         self.render_footer_instruction(frame, footer_area);
     }
 
-    fn render_branch_list(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, area: ratatui::layout::Rect, branch_names: Vec<String>, state: &mut ListState, current_branch_index: usize) {
+    fn render_branch_list(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, area: ratatui::layout::Rect, branch_names: Vec<String>, state: &mut ListState) {
         let items: Vec<ListItem> = branch_names
             .iter()
             .enumerate()
             .map(|(i, name)| {
-                let display_name = if i == current_branch_index {
+                let display_name = if i == self.current_branch_index {
                     format!("{} *", name)
                 } else {
                     name.to_string()
@@ -104,6 +107,7 @@ impl App {
                     if let Some(i) = state.selected() {
                         let selected = &branch_names[i];
                         branch::checkout_branch(constants::CURRENT_REPO, selected)?;
+                        self.current_branch_index = i;
                         return Ok(());
                     }
                 }
