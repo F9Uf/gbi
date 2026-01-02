@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            rust: stable
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#release/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        run: |
+          git config user.name "F9Uf"
+          git config user.email "atoseka@gmail.com"
+          git tag -a "${{ steps.extract_version.outputs.tag }}" -m "Release ${{ steps.extract_version.outputs.tag }}"
+          git push origin "${{ steps.extract_version.outputs.tag }}"
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+          profile: minimal
+
+      - name: Build release binary
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp target/${{ matrix.target }}/release/gbi artifacts/gbi-${{ matrix.target }}
+          cd artifacts
+          tar -czf gbi-${{ steps.extract_version.outputs.tag }}-${{ matrix.target }}.tar.gz gbi-${{ matrix.target }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.extract_version.outputs.tag }}
+          name: Release ${{ steps.extract_version.outputs.tag }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/gbi-${{ steps.extract_version.outputs.tag }}-${{ matrix.target }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
