@@ -45,10 +45,16 @@ jobs:
           target: ${{ matrix.target }}
           override: true
           profile: minimal
+      
+      - name: Add rustup target
+        run: rustup target add ${{ matrix.target }}
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cross
 
       - name: Build release binary
-        run: |
-          cargo build --release --target ${{ matrix.target }}
+        run: cross build --release --target ${{ matrix.target }}
 
       - name: Prepare artifacts
         run: |
