@@ -5,7 +5,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use gb::git::{branch, constants};
+use gbi::git::{branch, constants};
 use ratatui::{
     Terminal, backend::CrosstermBackend, layout::{Constraint, Layout}, style::{Modifier, Style}, widgets::{Block, Borders, List, ListItem, ListState, Paragraph}
 };

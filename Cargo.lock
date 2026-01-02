@@ -254,7 +254,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gb"
+name = "gbi"
 version = "0.1.0"
 dependencies = [
  "clap",
