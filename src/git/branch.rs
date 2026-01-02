@@ -13,6 +13,13 @@ fn valid_branch(branch_result: Result<(Branch<'_>, BranchType), Error>) -> Optio
         .map(|(branch, _)| branch)
 }
 
+pub fn get_current_branch(repo_name: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let repo = Repository::open(repo_name)?;
+    let head = repo.head()?;
+    let shorthand = head.shorthand().ok_or("Invalid branch name")?;
+    Ok(shorthand.to_string())
+}
+
 pub fn list_branches(repo_name: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let repo = Repository::open(repo_name)?;
     let branches_iter = repo.branches(None)?;
