@@ -1,16 +1,11 @@
 use git2::{Branch, BranchType, Error, Repository};
 
 fn map_branch_to_name_string(branch: Branch) -> Option<String> {
-    branch.name()
-        .ok()
-        .flatten()
-        .map(String::from)
+    branch.name().ok().flatten().map(String::from)
 }
 
 fn valid_branch(branch_result: Result<(Branch<'_>, BranchType), Error>) -> Option<Branch> {
-    branch_result
-        .ok()
-        .map(|(branch, _)| branch)
+    branch_result.ok().map(|(branch, _)| branch)
 }
 
 pub fn get_current_branch(repo_name: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -25,16 +20,16 @@ pub fn list_branches(repo_name: &str) -> Result<Vec<String>, Box<dyn std::error:
     let branches_iter = repo.branches(None)?;
 
     let branch_names: Vec<String> = branches_iter
-        .filter_map(|branch_result|
-            valid_branch(branch_result)
-            .and_then(map_branch_to_name_string)
-        )
+        .filter_map(|branch_result| valid_branch(branch_result).and_then(map_branch_to_name_string))
         .collect();
 
     Ok(branch_names)
 }
 
-pub fn checkout_branch(repo_name: &str, branch_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn checkout_branch(
+    repo_name: &str,
+    branch_name: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let repo = Repository::open(repo_name)?;
     let (object, reference) = repo.revparse_ext(branch_name)?;
 
