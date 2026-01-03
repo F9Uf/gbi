@@ -7,7 +7,11 @@ use crossterm::{
 };
 use gbi::git::{branch, constants};
 use ratatui::{
-    Frame, Terminal, backend::CrosstermBackend, layout::{Constraint, Layout}, style::{Modifier, Style}, widgets::{Block, Borders, List, ListItem, ListState, Paragraph}
+    backend::CrosstermBackend,
+    layout::{Constraint, Layout},
+    style::{Modifier, Style},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    Frame, Terminal,
 };
 
 #[derive(Default)]
@@ -17,7 +21,10 @@ struct App {
 }
 
 impl App {
-    fn run(mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<(), Box<dyn Error>> {
+    fn run(
+        mut self,
+        terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    ) -> Result<(), Box<dyn Error>> {
         let branch_names = branch::list_branches(constants::CURRENT_REPO)?;
         let currrent_branch_name = branch::get_current_branch(constants::CURRENT_REPO)?;
 
@@ -30,19 +37,23 @@ impl App {
 
         let mut state: ListState = ListState::default();
         state.select(Some(current_index));
-        
+
         while !self.exit {
-            terminal.draw(|f|
-                self.render(f, branch_names.clone(), &mut state))?;
-            
+            terminal.draw(|f| self.render(f, branch_names.clone(), &mut state))?;
+
             self.handle_input_events(branch_names.clone(), &mut state)?;
         }
 
         Ok(())
     }
 
-    fn render(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, branch_names: Vec<String>, state: &mut ListState) {
-        let layout =Layout::default()
+    fn render(
+        &self,
+        frame: &mut Frame<CrosstermBackend<io::Stdout>>,
+        branch_names: Vec<String>,
+        state: &mut ListState,
+    ) {
+        let layout = Layout::default()
             .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(frame.size());
 
@@ -53,7 +64,13 @@ impl App {
         self.render_footer_instruction(frame, footer_area);
     }
 
-    fn render_branch_list(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, area: ratatui::layout::Rect, branch_names: Vec<String>, state: &mut ListState) {
+    fn render_branch_list(
+        &self,
+        frame: &mut Frame<CrosstermBackend<io::Stdout>>,
+        area: ratatui::layout::Rect,
+        branch_names: Vec<String>,
+        state: &mut ListState,
+    ) {
         let items: Vec<ListItem> = branch_names
             .iter()
             .enumerate()
@@ -68,22 +85,27 @@ impl App {
             .collect();
 
         let branches_list = List::new(items)
-            .highlight_style(
-                Style::default().add_modifier(Modifier::REVERSED),
-            )
+            .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
             .highlight_symbol("➜ ");
 
         frame.render_stateful_widget(branches_list, area, state);
     }
 
-    fn render_footer_instruction(&self, frame: &mut Frame<CrosstermBackend<io::Stdout>>, area: ratatui::layout::Rect) {
+    fn render_footer_instruction(
+        &self,
+        frame: &mut Frame<CrosstermBackend<io::Stdout>>,
+        area: ratatui::layout::Rect,
+    ) {
         let footer = Paragraph::new("Use ↓↑ or jk to move, ENTER to select, q to quit")
             .block(Block::default().borders(Borders::TOP));
         frame.render_widget(footer, area);
-
     }
 
-    fn handle_input_events(&mut self, branch_names: Vec<String>, state: &mut ListState) -> Result<(), Box<dyn Error>> {
+    fn handle_input_events(
+        &mut self,
+        branch_names: Vec<String>,
+        state: &mut ListState,
+    ) -> Result<(), Box<dyn Error>> {
         if let Event::Key(key) = event::read()? {
             match key.code {
                 KeyCode::Char('q') => {
@@ -113,7 +135,6 @@ impl App {
                 }
                 _ => {}
             }
-
         }
         Ok(())
     }
@@ -124,7 +145,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
-    
+
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     let app = App::default().run(&mut terminal);
