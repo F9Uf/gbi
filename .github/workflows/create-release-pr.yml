@@ -28,30 +28,18 @@ jobs:
             exit 1
           fi
 
-      - name: Configure git
-        run: |
-          git config user.name "F9Uf"
-          git config user.email "atoseka@gmail.com"
-
-      - name: Create release branch
-        run: |
-          git checkout -b release/${{ github.event.inputs.version }}
-
       - name: Update version in Cargo.toml
         run: |
           sed -i 's/^version = ".*"/version = "${{ github.event.inputs.version }}"/' Cargo.toml
-          git add Cargo.toml
-          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
-
-      - name: Push release branch
-        run: |
-          git push origin release/${{ github.event.inputs.version }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: release/${{ github.event.inputs.version }}
+          commit-message: "chore: bump version to ${{ github.event.inputs.version }}"
+          committer: F9Uf <atoseka@gmail.com>
+          author: F9Uf <atoseka@gmail.com>
           title: "Release v${{ github.event.inputs.version }}"
           body: |
             ## Release v${{ github.event.inputs.version }}
