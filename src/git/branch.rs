@@ -4,7 +4,7 @@ fn map_branch_to_name_string(branch: Branch) -> Option<String> {
     branch.name().ok().flatten().map(String::from)
 }
 
-fn valid_branch(branch_result: Result<(Branch<'_>, BranchType), Error>) -> Option<Branch> {
+fn valid_branch(branch_result: Result<(Branch<'_>, BranchType), Error>) -> Option<Branch<'_>> {
     branch_result.ok().map(|(branch, _)| branch)
 }
 
